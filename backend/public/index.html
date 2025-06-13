@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>index</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #2c3e50, #27ae60, #3498db);
+            background-size: 400%;
+            animation: gradientShift 15s ease infinite;
+            overflow: hidden;
+        }
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideIn 1s ease-out;
+        }
+        h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2rem;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 5px rgba(39, 174, 96, 0.3);
+        }
+        .input-box {
+            position: relative;
+            margin: 20px 0;
+        }
+        .input-box input {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 2px solid #27ae60;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #2c3e50;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+        .input-box input:focus {
+            border-color: #3498db;
+            transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+            outline: none;
+        }
+        .input-box label {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            font-size: 1rem;
+            color: #e74c3c;
+            pointer-events: none;
+            transition: 0.3s;
+            background: #fff;
+            padding: 0 5px;
+        }
+        .input-box input:focus ~ label,
+        .input-box input:not(:placeholder-shown) ~ label {
+            top: -20px;
+            left: 8px;
+            font-size: 0.8rem;
+            color: #27ae60;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #27ae60, #3498db);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.5);
+            background: linear-gradient(45deg, #3498db, #27ae60);
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 480px) {
+            .container { width: 90%; padding: 20px; }
+            h2 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="container">
+        <h2>Carbon Watchers</h2>
+        <div class="input-box">
+            <input type="text" id="name" placeholder=" " required>
+            <label>Name</label>
+        </div>
+        <div id="formError" class="error"></div>
+        <button onclick="handleSubmit()">Submit</button>
+    </div>
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: '#27ae60' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: { enable: false },
+                move: { enable: true, speed: 6, direction: 'bottom', random: true, out_mode: 'out' }
+            },
+            interactivity: { detect_on: 'canvas', events: { onhover: { enable: false }, onclick: { enable: false } } }
+        });
+
+        async function handleSubmit() {
+            const name = document.getElementById('name').value;
+            const error = document.getElementById('formError');
+
+            if (!name.trim()) {
+                error.textContent = 'Please enter your name.';
+                error.style.display = 'block';
+                console.log('Validation failed: Name required');
+                return;
+            }
+
+            try {
+                console.log('Submitting name:', name);
+                const response = await fetch('http://localhost:3000/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('userName', name);
+                    error.style.display = 'none';
+                    console.log('Submission successful, navigating to calculator.html');
+                    window.location.href = 'calculator.html';
+                } else {
+                    error.textContent = data.message || 'Submission failed.';
+                    error.style.display = 'block';
+                    console.log('Submission failed:', data.message);
+                }
+            } catch (err) {
+                error.textContent = 'Server error. Please try again.';
+                error.style.display = 'block';
+                console.error('Submission error:', err.message, err.stack);
+            }
+        }
+    </script>
+</body>
+</html>

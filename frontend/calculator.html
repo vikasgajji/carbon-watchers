@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+            transition: background-color 1s ease;
+        }
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            top: 0;
+            left: 0;
+        }
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%2327ae60' fill-opacity='0.3' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            animation: waveMove 10s linear infinite;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease-in;
+        }
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2rem;
+            text-align: center;
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+        .user-info {
+            text-align: center;
+            font-size: 1rem;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        .calculator {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .category {
+            background: rgba(255, 255, 255, 0.95);
+            margin-bottom: 10px;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .category-header {
+            padding: 15px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .category-header:hover {
+            background-color: #e8f5e9;
+            transform: translateY(-2px);
+        }
+        .category-header::after {
+            content: '▼';
+            font-size: 0.8rem;
+            color: #27ae60;
+        }
+        .category-header.active::after {
+            content: '▲';
+        }
+        .category-content {
+            display: none;
+            padding: 15px;
+            animation: slideDown 0.3s ease-out;
+        }
+        .category-content.active {
+            display: block;
+        }
+        label {
+            display: block;
+            margin: 8px 0 4px;
+            font-weight: 500;
+            color: #e74c3c;
+            font-size: 0.9rem;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #27ae60;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+        input:hover, select:hover {
+            border-color: #3498db;
+            transform: scale(1.02);
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+        }
+        input:focus, select:focus {
+            border-color: #e74c3c;
+            outline: none;
+        }
+        button {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 30px auto 20px;
+            padding: 12px;
+            background: linear-gradient(45deg, #27ae60, #3498db);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.5);
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+        #results {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideIn 1s ease-out;
+        }
+        #results.active {
+            display: block !important;
+        }
+        .status {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .total {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        svg {
+            max-width: 100%;
+            width: 300px;
+            height: 300px;
+            animation: growIn 1.5s ease-out;
+        }
+        .tips {
+            margin-top: 20px;
+        }
+        .tips h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .tips ul {
+            list-style: none;
+        }
+        .tips li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+            transition: transform 0.3s, color 0.3s;
+        }
+        .tips li::before {
+            content: '🌱';
+            position: absolute;
+            left: 0;
+        }
+        .tips li:hover {
+            transform: translateX(10px);
+            color: #27ae60;
+        }
+        @keyframes waveMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 1440px 0; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes growIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            h1 { font-size: 1.5rem; }
+            .category-header { font-size: 1rem; }
+            .container, .calculator { max-width: 100%; }
+            button { max-width: 100%; }
+            .status { font-size: 1.5rem; }
+            .total { font-size: 1.2rem; }
+            svg { width: 250px; height: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="wave"></div>
+    <div class="container">
+        <h1>Carbon Footprint Calculator</h1>
+        <p class="user-info">Calculating for: <span id="userName"></span></p>
+        <div class="calculator">
+            <div class="category">
+                <div class="category-header" onclick="toggleCategory(this)">Electricity Usage</div>
+                <div class="category-content">
+                    <label>Number of Fans (40W each):</label>
+                    <input type="number" id="fans" min="0" value="0">
+                    <label>Hours Fans Used:</label>
+                    <input type="number" id="fansHours" min="0" value="0">
+                    <label>Number of Lights:</label>
+                    <input type="number" id="lights" min="0" value="0">
+                    <label>Type of Lights:</label>
+                    <select id="lightType">
+                        <option value="led">LED (10W)</option>
+                        <option value="cfl">CFL (15W)</option>
+                        <option value="incandescent">Incandescent (60W)</option>
+                    </select>
+                    <label>Hours Lights Used:</label>
+                    <input type="number" id="lightsHours" min="0" value="0">
+                    <label>Number of AC Units (1000W each):</label>
+                    <input type="number" id="ac" min="0" value="0">
+                    <label>Hours AC Used:</label>
+                    <input type="number" id="acHours" min="0" value="0">
+                    <label>Number of Refrigerators (150W each):</label>
+                    <input type="number" id="fridge" min="0" value="0">
+                    <label>Hours Fridge Used:</label>
+                    <input type="number" id="fridgeHours" min="0" value="24">
+                    <label>Number of TVs (100W each):</label>
+                    <input type="number" id="tv" min="0" value="0">
+                    <label>Hours TV Used:</label>
+                    <input type="number" id="tvHours" min="0" value="0">
+                </div>
+            </div>
+            <div class="category">
+                <div class="category-header" onclick="toggleCategory(this)">Driving</div>
+                <div class="category-content">
+                    <label>Vehicle Type:</label>
+                    <select id="vehicleType">
+                        <option value="none">None</option>
+                        <option value="petrol">Petrol</option>
+                        <option value="diesel">Diesel</option>
+                        <option value="ev">Electric Vehicle (EV)</option>
+                    </select>
+                    <label>Distance Driven (km):</label>
+                    <input type="number" id="distance" min="0" value="0">
+                </div>
+            </div>
+            <div class="category">
+                <div class="category-header" onclick="toggleCategory(this)">Diet</div>
+                <div class="category-content">
+                    <label>Diet Type:</label>
+                    <select id="dietType">
+                        <option value="meat">Meat-heavy</option>
+                        <option value="vegetarian">Vegetarian</option>
+                        <option value="vegan">Vegan</option>
+                    </select>
+                </div>
+            </div>
+            <div class="category">
+                <div class="category-header" onclick="toggleCategory(this)">Mobile Usage</div>
+                <div class="category-content">
+                    <label>Hours Mobile Used Per Day:</label>
+                    <input type="number" id="mobileHours" min="0" value="0">
+                </div>
+            </div>
+        </div>
+        <button onclick="calculate()">Calculate Emissions</button>
+        <div id="calcError" class="error"></div>
+        <div id="results">
+            <div class="status" id="status"></div>
+            <div class="total">Total Emissions: <span id="totalEmissions">0</span> kg CO2/day</div>
+            <div class="charts">
+                <svg id="barChart"></svg>
+                <svg id="pieChart"></svg>
+            </div>
+            <div class="tips">
+                <h2>Green Tips</h2>
+                <ul id="tips"></ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 60, density: { enable: true, value_area: 800 } },
+                color: { value: '#27ae60' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.4, random: true },
+                size: { value: 3, random: true },
+                move: { enable: true, speed: 4, direction: 'bottom', random: true, out_mode: 'out' }
+            },
+            interactivity: { detect_on: 'canvas', events: { onhover: { enable: false }, onclick: { enable: false } } }
+        });
+
+        const emissionFactors = {
+            electricity: 0.5, // kg CO2/kWh
+            fan: 0.04, // kW
+            light: { led: 0.01, cfl: 0.015, incandescent: 0.06 },
+            ac: 1.0,
+            fridge: 0.15,
+            tv: 0.1,
+            mobile: 0.02, // kg CO2/hour
+            vehicle: { petrol: 2.3 / 10, diesel: 2.7 / 12, ev: 0.2, none: 0 },
+            diet: { meat: 10, vegetarian: 4, vegan: 2.5 }
+        };
+
+        function displayUserInfo() {
+            const name = localStorage.getItem('userName') || 'Guest';
+            document.getElementById('userName').textContent = name;
+            console.log('Displayed user:', name);
+        }
+        displayUserInfo();
+
+        function toggleCategory(header) {
+            const content = header.nextElementSibling;
+            const isActive = content.classList.contains('active');
+            
+            document.querySelectorAll('.category-content').forEach(c => {
+                c.classList.remove('active');
+                c.parentElement.querySelector('.category-header').classList.remove('active');
+            });
+
+            if (!isActive) {
+                content.classList.add('active');
+                header.classList.add('active');
+                console.log('Toggled category:', header.textContent);
+            }
+        }
+
+        function calculate() {
+            const error = document.getElementById('calcError');
+            error.style.display = 'none';
+            try {
+                console.log('Calculate button clicked');
+                const inputs = {
+                    fans: Math.max(0, parseFloat(document.getElementById('fans').value) || 0),
+                    fansHours: Math.max(0, parseFloat(document.getElementById('fansHours').value) || 0),
+                    lights: Math.max(0, parseFloat(document.getElementById('lights').value) || 0),
+                    lightType: document.getElementById('lightType').value || 'led',
+                    lightsHours: Math.max(0, parseFloat(document.getElementById('lightsHours').value) || 0),
+                    ac: Math.max(0, parseFloat(document.getElementById('ac').value) || 0),
+                    acHours: Math.max(0, parseFloat(document.getElementById('acHours').value) || 0),
+                    fridge: Math.max(0, parseFloat(document.getElementById('fridge').value) || 0),
+                    fridgeHours: Math.max(0, parseFloat(document.getElementById('fridgeHours').value) || 24),
+                    tv: Math.max(0, parseFloat(document.getElementById('tv').value) || 0),
+                    tvHours: Math.max(0, parseFloat(document.getElementById('tvHours').value) || 0),
+                    mobileHours: Math.max(0, parseFloat(document.getElementById('mobileHours').value) || 0),
+                    vehicleType: document.getElementById('vehicleType').value || 'none',
+                    distance: Math.max(0, parseFloat(document.getElementById('distance').value) || 0),
+                    dietType: document.getElementById('dietType').value || 'vegetarian'
+                };
+
+                console.log('Inputs collected:', inputs);
+
+                if (inputs.vehicleType !== 'none' && inputs.distance <= 0) {
+                    error.textContent = 'Please enter a valid distance for the selected vehicle.';
+                    error.style.display = 'block';
+                    console.log('Validation failed: Invalid distance');
+                    return;
+                }
+
+                displayResults(inputs);
+            } catch (err) {
+                console.error('Error in calculate:', err.message, err.stack);
+                error.textContent = 'Calculation error. Please try again.';
+                error.style.display = 'block';
+            }
+        }
+
+        function renderCharts(data) {
+            console.log('Rendering charts with data:', data);
+            const width = 300, height = 300, margin = { top: 20, right: 20, bottom: 50, left: 50 };
+            const chartWidth = width - margin.left - margin.right;
+            const chartHeight = height - margin.top - margin.bottom;
+
+            // Clear previous charts
+            d3.select('#barChart').selectAll('*').remove();
+            d3.select('#pieChart').selectAll('*').remove();
+
+            // Bar Chart
+            const barSvg = d3.select('#barChart')
+                .attr('width', width)
+                .attr('height', height)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.label))
+                .range([0, chartWidth])
+                .padding(0.1);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.value) * 1.2])
+                .range([chartHeight, 0]);
+
+            barSvg.selectAll('.bar')
+                .data(data)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar')
+                .attr('x', d => x(d.label))
+                .attr('y', chartHeight)
+                .attr('width', x.bandwidth())
+                .attr('height', 0)
+                .attr('fill', (d, i) => ['#27ae60', '#3498db', '#e74c3c', '#f1c40f'][i])
+                .transition()
+                .duration(1500)
+                .attr('y', d => y(d.value))
+                .attr('height', d => chartHeight - y(d.value));
+
+            barSvg.append('g')
+                .attr('transform', `translate(0,${chartHeight})`)
+                .call(d3.axisBottom(x))
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end');
+
+            barSvg.append('g')
+                .call(d3.axisLeft(y))
+                .append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -40)
+                .attr('x', -chartHeight / 2)
+                .style('text-anchor', 'middle')
+                .text('kg CO2/day');
+
+            // Pie Chart
+            const pieSvg = d3.select('#pieChart')
+                .attr('width', width)
+                .attr('height', height)
+                .append('g')
+                .attr('transform', `translate(${width / 2},${height / 2})`);
+
+            const radius = Math.min(chartWidth, chartHeight) / 2;
+            const pie = d3.pie().value(d => d.value);
+            const arc = d3.arc().innerRadius(0).outerRadius(radius);
+
+            pieSvg.selectAll('.arc')
+                .data(pie(data))
+                .enter()
+                .append('path')
+                .attr('class', 'arc')
+                .attr('d', arc)
+                .attr('fill', (d, i) => ['#27ae60', '#3498db', '#e74c3c', '#f1c40f'][i])
+                .attr('opacity', 0)
+                .transition()
+                .duration(1500)
+                .attr('opacity', 1);
+
+            // Legend
+            const legend = pieSvg.selectAll('.legend')
+                .data(data)
+                .enter()
+                .append('g')
+                .attr('class', 'legend')
+                .attr('transform', (d, i) => `translate(${radius + 10},${-radius + i * 20})`);
+
+            legend.append('rect')
+                .attr('x', 0)
+                .attr('width', 15)
+                .attr('height', 15)
+                .attr('fill', (d, i) => ['#27ae60', '#3498db', '#e74c3c', '#f1c40f'][i]);
+
+            legend.append('text')
+                .attr('x', 20)
+                .attr('y', 12)
+                .text(d => d.label)
+                .style('font-size', '12px');
+
+            console.log('Charts rendered');
+        }
+
+        function displayResults(inputs) {
+            try {
+                console.log('Starting displayResults');
+                const name = localStorage.getItem('userName') || 'Guest';
+                const resultsDiv = document.getElementById('results');
+                const error = document.getElementById('calcError');
+
+                resultsDiv.classList.add('active');
+                resultsDiv.style.display = 'block';
+                console.log('Results div activated');
+
+                // Calculate emissions
+                console.log('Calculating emissions');
+                const electricityKWh = (
+                    (inputs.fans * inputs.fansHours * emissionFactors.fan) +
+                    (inputs.lights * inputs.lightsHours * (emissionFactors.light[inputs.lightType] || 0.01)) +
+                    (inputs.ac * inputs.acHours * emissionFactors.ac) +
+                    (inputs.fridge * inputs.fridgeHours * emissionFactors.fridge) +
+                    (inputs.tv * inputs.tvHours * emissionFactors.tv)
+                );
+                const electricityEmissions = electricityKWh * emissionFactors.electricity;
+                const mobileEmissions = inputs.mobileHours * emissionFactors.mobile;
+                const vehicleEmissions = inputs.distance * (emissionFactors.vehicle[inputs.vehicleType] || 0);
+                const dietEmissions = emissionFactors.diet[inputs.dietType] || 4;
+                const totalEmissions = electricityEmissions + mobileEmissions + vehicleEmissions + dietEmissions;
+
+                console.log('Emissions calculated:', {
+                    electricity: electricityEmissions.toFixed(2),
+                    mobile: mobileEmissions.toFixed(2),
+                    vehicle: vehicleEmissions.toFixed(2),
+                    diet: dietEmissions.toFixed(2),
+                    total: totalEmissions.toFixed(2)
+                });
+
+                // Animate total emissions
+                const totalElement = document.getElementById('totalEmissions');
+                let current = 0;
+                const increment = totalEmissions / 50;
+                const animate = setInterval(() => {
+                    current += increment;
+                    if (current >= totalEmissions) {
+                        current = totalEmissions;
+                        clearInterval(animate);
+                    }
+                    totalElement.textContent = current.toFixed(2);
+                }, 40);
+
+                // Set status and alert
+                const statusElement = document.getElementById('status');
+                let status, alertMsg, bgColor;
+                if (totalEmissions < 2.74) {
+                    status = 'Good 🌿';
+                    alertMsg = 'Good: Your emissions are low! Keep it up!';
+                    bgColor = '#dff0d8';
+                } else if (totalEmissions <= 7) {
+                    status = 'Moderate 😊';
+                    alertMsg = 'Moderate: Your emissions are balanced. Room for improvement!';
+                    bgColor = '#fff3cd';
+                } else {
+                    status = 'High 🚨';
+                    alertMsg = 'High: Your emissions are too high! Take action!';
+                    bgColor = '#f5c6cb';
+                }
+                statusElement.textContent = status;
+                document.body.style.backgroundColor = bgColor;
+                alert(alertMsg);
+                console.log('Status set:', status);
+
+                // Generate tips
+                console.log('Generating tips');
+                const tipsList = document.getElementById('tips');
+                tipsList.innerHTML = '';
+                const tips = [];
+                if (inputs.lightType !== 'led') tips.push('Switch to LED lights to save energy.');
+                if (inputs.acHours > 5) tips.push('Reduce AC usage or use energy-efficient models.');
+                if (inputs.fridgeHours > 20) tips.push('Optimize refrigerator settings to save power.');
+                if (inputs.mobileHours > 5) tips.push('Limit mobile usage or use power-saving modes.');
+                if (inputs.vehicleType === 'petrol' || inputs.vehicleType === 'diesel') tips.push('Consider EVs or public transport.');
+                if (inputs.dietType === 'meat') tips.push('Incorporate more plant-based meals.');
+                if (totalEmissions > 7) tips.push('Conduct an energy audit at home.');
+                if (totalEmissions > 20) tips.push('Urgently adopt sustainable practices.');
+                tips.forEach(tip => {
+                    const li = document.createElement('li');
+                    li.textContent = tip;
+                    tipsList.appendChild(li);
+                });
+                console.log('Tips generated:', tips);
+
+                // Render charts
+                console.log('Attempting to render charts');
+                if (!window.d3) {
+                    console.error('D3.js not loaded');
+                    error.textContent = 'Chart library failed to load.';
+                    error.style.display = 'block';
+                    return;
+                }
+
+                const chartData = [
+                    { label: 'Electricity', value: parseFloat(electricityEmissions.toFixed(2)) },
+                    { label: 'Mobile', value: parseFloat(mobileEmissions.toFixed(2)) },
+                    { label: 'Transport', value: parseFloat(vehicleEmissions.toFixed(2)) },
+                    { label: 'Diet', value: parseFloat(dietEmissions.toFixed(2)) }
+                ];
+                renderCharts(chartData);
+
+                // Send to backend
+                console.log('Sending data to backend');
+                fetch('http://localhost:3000/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        totalEmissions: totalEmissions.toFixed(2)
+                    })
+                }).catch(err => {
+                    console.error('Backend fetch error:', err.message);
+                    error.textContent = 'Failed to save results to server.';
+                    error.style.display = 'block';
+                });
+
+                console.log('Results displayed successfully');
+            } catch (err) {
+                console.error('Error in displayResults:', err.message, err.stack);
+                document.getElementById('calcError').textContent = 'Failed to display results: ' + err.message;
+                document.getElementById('calcError').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
